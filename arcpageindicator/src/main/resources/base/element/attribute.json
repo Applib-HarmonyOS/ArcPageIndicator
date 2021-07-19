@@ -1,0 +1,56 @@
+{
+  "string": [
+    {
+      "name": "apiPageSliderId",
+      "value": "pageSliderId"
+    },
+    {
+      "name": "apiSpotsColor",
+      "value": "spotsColor"
+    },
+    {
+      "name": "apiSelectedSpotColor",
+      "value": "selectedSpotColor"
+    },
+    {
+      "name": "apiSpotsRadius",
+      "value": "spotsRadius"
+    },
+    {
+      "name": "apiInvertDirection",
+      "value": "invertDirection"
+    },
+    {
+      "name": "apiHandEnabled",
+      "value": "handEnabled"
+    },
+    {
+      "name": "apiHandColor",
+      "value": "handColor"
+    },
+    {
+      "name": "apiHandWidth",
+      "value": "handWidth"
+    },
+    {
+      "name": "apiHandRelativeLength",
+      "value": "handRelativeLength"
+    },
+    {
+      "name": "apiIntervalMeasureAngle",
+      "value": "intervalMeasureAngle"
+    },
+    {
+      "name": "apiAnimationType",
+      "value": "animationType"
+    },
+    {
+      "name": "apiArcOrientation",
+      "value": "arcOrientation"
+    },
+    {
+      "name": "apiSpotShape",
+      "value": "spotShape"
+    }
+  ]
+}

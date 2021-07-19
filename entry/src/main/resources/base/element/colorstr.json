@@ -1,0 +1,52 @@
+{
+  "string": [
+    {
+      "name": "color_0",
+      "value": "#FF113366"
+    },
+    {
+      "name": "color_1",
+      "value": "#FF116633"
+    },
+    {
+      "name": "color_2",
+      "value": "#FF661133"
+    },
+    {
+      "name": "color_3",
+      "value": "#FF663311"
+    },
+    {
+      "name": "color_4",
+      "value": "#FF336611"
+    },
+    {
+      "name": "color_5",
+      "value": "#FF331166"
+    },
+    {
+      "name": "color_6",
+      "value": "#FF111133"
+    },
+    {
+      "name": "color_7",
+      "value": "#FF113311"
+    },
+    {
+      "name": "color_8",
+      "value": "#FF331111"
+    },
+    {
+      "name": "color_9",
+      "value": "#FF113333"
+    },
+    {
+      "name": "color_10",
+      "value": "#FF331133"
+    },
+    {
+      "name": "color_11",
+      "value": "#FF333311"
+    }
+  ]
+}
