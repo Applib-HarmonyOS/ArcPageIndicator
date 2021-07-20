@@ -1,613 +1,814 @@
 package it.beppi.arcpageindicator;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.util.AttributeSet;
-import android.util.TypedValue;
-import android.view.View;
-
-import static android.graphics.Paint.Style.FILL;
-import static android.graphics.Paint.Style.STROKE;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.bump;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.color;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.cover;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.fill;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.necklace;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.necklace2;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.none;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.pinch;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.rotate;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.rotate_pinch;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.slide;
-import static it.beppi.arcpageindicator.ArcPageIndicator.AnimationType.surround;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toDown;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toDownLeft;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toDownRight;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toLeft;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toRight;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toUp;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toUpLeft;
-import static it.beppi.arcpageindicator.ArcPageIndicator.ArcOrientation.toUpRight;
-import static it.beppi.arcpageindicator.ArcPageIndicator.SpotShape.circle;
-import static it.beppi.arcpageindicator.ArcPageIndicator.SpotShape.roundedSquare;
-import static it.beppi.arcpageindicator.ArcPageIndicator.SpotShape.square;
+import it.beppi.arcpageindicator.util.AttrUtil;
+import ohos.aafwk.ability.Ability;
+import ohos.agp.components.AttrSet;
+import ohos.agp.components.Component;
+import ohos.agp.components.PageSlider;
+import ohos.agp.components.PageSliderProvider;
+import ohos.agp.render.Canvas;
+import ohos.agp.render.Paint;
+import ohos.agp.utils.Color;
+import ohos.app.Context;
 
 /**
- * Created by Beppi on 30/12/2016.
+ * ArcPageIndicator is a custom page indicator with stunning animations. Needs a very small screen, prefect when
+ * many pages need to be shown and reached in a small time.
  */
+public class ArcPageIndicator extends Component implements PageSlider.PageChangedListener,
+        Component.DrawTask, Component.EstimateSizeListener, Component.BindStateChangedListener {
 
-public class ArcPageIndicator extends View implements ViewPager.OnPageChangeListener {
+    /**
+     * Possible Animations.
+     */
     public enum AnimationType {
-        none,
-        color,
-        slide,
-        pinch,
-        bump,
-        rotate,
-        rotate_pinch,
-        necklace,
-        necklace2,
-        cover,
-        fill,
-        surround
+        NONE,
+        COLOR,
+        SLIDE,
+        PINCH,
+        BUMP,
+        ROTATE,
+        ROTATE_PINCH,
+        NECKLACE,
+        NECKLACE2,
+        COVER,
+        FILL,
+        SURROUND
     }
+
+    /**
+     * Possible Arc Orientations.
+     */
     public enum ArcOrientation {
-        toUp,
-        toDown,
-        toRight,
-        toLeft,
-        toUpRight,
-        toUpLeft,
-        toDownRight,
-        toDownLeft
+        TO_UP,
+        TO_DOWN,
+        TO_RIGHT,
+        TO_LEFT,
+        TO_UP_RIGHT,
+        TO_UP_LEFT,
+        TO_DOWN_RIGHT,
+        TO_DOWN_LEFT
     }
+
+    /**
+     * Possible Spot Shapes.
+     */
     public enum SpotShape {
-        circle,
-        roundedSquare,
-        square
-    }
-
-    // attributes
-    ViewPager viewPager = null;
-    int viewPagerRes = 0;
-    int spotsColor = 0x33cccccc;
-    int selectedSpotColor = 0xcccccccc;
-    int spotsRadius = 5;
-    boolean intervalMeasureAngle = false;
-    AnimationType animationType = color;
-    ArcOrientation arcOrientation = toUp;
-    boolean invertDirection = false;
-    SpotShape spotShape = circle;
-
-    boolean handEnabled = false;
-    int handColor = spotsColor;
-    int handWidth = 4;
-    float handRelativeLength = 0.8f;
-
-    // variables
-    float verticalRadius, horizontalRadius, centerX, centerY;
-
-    public ArcPageIndicator(Context context, View contentView) {
-        super(context);
-        init(context, null);
-    }
-
-    public ArcPageIndicator(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
-    }
-
-    public ArcPageIndicator(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context, attrs);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public ArcPageIndicator(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init(context, attrs);
-    }
-
-
-    void init(Context ctx, AttributeSet attrs) {
-        this.ctx = ctx;
-        loadAttributes(attrs);
-        initTools();
+        CIRCLE,
+        ROUNDED_SQUARE,
+        SQUARE
     }
 
     /**
-     * Load attributes from the xml and set them into variables
-     * @param attrs
+     * The PageSlider associated to the indicator.
      */
-    void loadAttributes(AttributeSet attrs) {
-        if (attrs == null) return;
-
-        TypedArray typedArray = ctx.obtainStyledAttributes(attrs, R.styleable.ArcPageIndicator);
-
-        viewPagerRes = typedArray.getResourceId(R.styleable.ArcPageIndicator_apiViewPager, 0);
-
-        spotsColor = typedArray.getColor(R.styleable.ArcPageIndicator_apiSpotsColor, spotsColor);
-        selectedSpotColor = typedArray.getColor(R.styleable.ArcPageIndicator_apiSelectedSpotColor, selectedSpotColor);
-        spotsRadius = typedArray.getDimensionPixelSize(R.styleable.ArcPageIndicator_apiSpotsRadius, spotsRadius);
-
-        invertDirection = typedArray.getBoolean(R.styleable.ArcPageIndicator_apiInvertDirection, invertDirection);
-
-        handEnabled = typedArray.getBoolean(R.styleable.ArcPageIndicator_apiHandEnabled, handEnabled);
-        handColor = typedArray.getColor(R.styleable.ArcPageIndicator_apiHandColor, handColor);
-        handWidth = typedArray.getDimensionPixelSize(R.styleable.ArcPageIndicator_apiHandWidth, handWidth);
-        handRelativeLength = typedArray.getFloat(R.styleable.ArcPageIndicator_apiHandRelativeLength, handRelativeLength);
-
-        String ima = typedArray.getString(R.styleable.ArcPageIndicator_apiIntervalMeasure);
-        if (ima != null) intervalMeasureAngle = ima.equals("0");
-
-        String anim = typedArray.getString(R.styleable.ArcPageIndicator_apiAnimationType);
-        if (anim != null) {
-            if (anim.equals("0")) animationType = none;
-            else if (anim.equals("1")) animationType = color;
-            else if (anim.equals("2")) animationType = slide;
-            else if (anim.equals("3")) animationType = pinch;
-            else if (anim.equals("4")) animationType = bump;
-            else if (anim.equals("5")) animationType = rotate;
-            else if (anim.equals("6")) animationType = rotate_pinch;
-            else if (anim.equals("7")) animationType = necklace;
-            else if (anim.equals("8")) animationType = necklace2;
-            else if (anim.equals("9")) animationType = cover;
-            else if (anim.equals("10")) animationType = fill;
-            else if (anim.equals("11")) animationType = surround;
-        }
-
-        String orie = typedArray.getString(R.styleable.ArcPageIndicator_apiArcOrientation);
-        if (orie != null) {
-            if (orie.equals("0"))       arcOrientation = toUp;
-            else if (orie.equals("1"))  arcOrientation = toDown;
-            else if (orie.equals("2"))  arcOrientation = toRight;
-            else if (orie.equals("3"))  arcOrientation = toLeft;
-            else if (orie.equals("4"))  arcOrientation = toUpRight;
-            else if (orie.equals("5"))  arcOrientation = toUpLeft;
-            else if (orie.equals("6"))  arcOrientation = toDownRight;
-            else if (orie.equals("7"))  arcOrientation = toDownLeft;
-        }
-
-        String sha = typedArray.getString(R.styleable.ArcPageIndicator_apiSpotShape);
-        if (sha != null) {
-            if (sha.equals("0"))        spotShape = circle;
-            else if (sha.equals("1"))   spotShape = roundedSquare;
-            else if (sha.equals("2"))   spotShape = square;
-        }
-
-        typedArray.recycle();
-    }
+    private int pageSliderId;
 
     /**
-     * Look for the View Pager
+     * Color of the displayed Spots.
      */
-    void findViewPager() {
-        if (viewPager != null) return;
-        if (viewPagerRes == 0) return;
+    private int spotsColor;
 
-        Context ctx = getContext();
-        if (ctx instanceof Activity) {
-            Activity activity = (Activity) getContext();
-            View view = activity.findViewById(viewPagerRes);  // FALLISCE
+    /**
+     * Color of the selected Spot referring to current page.
+     */
+    private int selectedSpotColor;
 
-            if (view != null && view instanceof ViewPager) {
-                configureViewPager((ViewPager) view);
-            }
-        }
-    }
-    void configureViewPager(ViewPager viewPager) {
-        releaseViewPager();
-        this.viewPager = viewPager;
-        viewPager.addOnPageChangeListener(this);
-        pagerAdapter = viewPager.getAdapter();
-        currentPosition = viewPager.getCurrentItem();
+    /**
+     * Radius of the spots.
+     */
+    private int spotsRadius;
 
-    }
+    /**
+     * If true, inverts the direction of selected spot movement.
+     */
+    private boolean invertDirection;
 
-    public void releaseViewPager() {
-        if (viewPager != null) {
-            viewPager.removeOnPageChangeListener(this);
-            viewPager = null;
-        }
-    }
+    /**
+     * Displays the hand to the indicator.
+     */
+    private boolean handEnabled;
 
+    /**
+     * Color of the hand.
+     */
+    private int handColor;
+
+    /**
+     * Width of the hand.
+     */
+    private int handWidth;
+
+    /**
+     * Hand's relative length starting from center to edges.
+     */
+    private float handRelativeLength;
+
+    /**
+     * How spots are distributed on the circumference: constant angle or constant arc length. With
+     * constant angle, the spots will not be distributed evenly, because of ellipse's eccentricity.
+     * Normally constant arc length is used.
+     * If true, constant angle is used.
+     */
+    private boolean intervalMeasureAngle;
+
+    /**
+     * Type of Animation as per ArcPageIndicator.AnimationType.
+     */
+    private AnimationType animationType;
+
+    /**
+     * Arc orientation as per ArcPageIndicator.ArcOrientation.
+     */
+    private ArcOrientation arcOrientation;
+
+    /**
+     * Spot shape as per ArcPageIndicator.SpotShape.
+     */
+    private SpotShape spotShape;
+
+    // PageSlider in entry module
+    PageSlider pageSlider = null;
+    // pageProvider of above Page Slider
+    PageSliderProvider pagerProvider = null;
+    float verticalRadius;
+    float horizontalRadius;
+    float centerX;
+    float centerY;
     private Paint paint;
-    private Context ctx;
-    PagerAdapter pagerAdapter = null;
+    private Context context;
 
     /**
-     * Initialize what can be initialized at the beginning
+     * Constructor.
+     *
+     * @param context Context.
+     * @param attrSet AttributeSet.
      */
-    void initTools() {
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(1);
-        paint.setStyle(FILL);
+    public ArcPageIndicator(Context context, AttrSet attrSet) {
+        super(context, attrSet);
+        init(context, attrSet);
+    }
+
+    /**
+     * Adds all the listeners, DrawTask and Loads the Attributes.
+     *
+     * @param context Context.
+     * @param attrSet AttributeSet.
+     */
+    private void init(Context context, AttrSet attrSet) {
+        this.context = context;
+        loadAttributes(attrSet);
+        initTools();
+        setBindStateChangedListener(this);
+        setEstimateSizeListener(this);
+        addDrawTask(this);
+    }
+
+    /**
+     * Loads all the Attributes.
+     *
+     * @param attrSet AttributeSet.
+     */
+    private void loadAttributes(AttrSet attrSet) {
+        if (attrSet == null) {
+            return;
+        }
+
+        pageSliderId = AttrUtil.getIntegerValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiPageSliderId), AttrUtil.DEFAULT_PAGE_SLIDER_ID);
+
+        spotsColor = AttrUtil.getColorValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiSpotsColor), AttrUtil.DEFAULT_SPOTS_COLOR);
+
+        selectedSpotColor = AttrUtil.getColorValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiSelectedSpotColor), AttrUtil.DEFAULT_SELECTED_SPOT_COLOR);
+
+        spotsRadius = AttrUtil.getIntegerValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiSpotsRadius), AttrUtil.DEFAULT_SPOTS_RADIUS);
+
+        invertDirection = AttrUtil.getBooleanValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiInvertDirection), AttrUtil.DEFAULT_INVERT_DIRECTION);
+
+        handEnabled = AttrUtil.getBooleanValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiHandEnabled), AttrUtil.DEFAULT_HAND_ENABLED);
+
+        handColor = AttrUtil.getColorValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiHandColor), AttrUtil.DEFAULT_HAND_COLOR);
+
+        handWidth = AttrUtil.getIntegerValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiHandWidth), AttrUtil.DEFAULT_HAND_WIDTH);
+
+        handRelativeLength = AttrUtil.getFloatValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiHandRelativeLength), AttrUtil.DEFAULT_HAND_RELATIVE_LENGTH);
+
+        intervalMeasureAngle = AttrUtil.getBooleanValue(attrSet, AttrUtil.getString(context,
+                ResourceTable.String_apiIntervalMeasureAngle), AttrUtil.DEFAULT_INTERVAL_MEASURE_ANGLE);
+
+        String animationTypeString = AttrUtil.getStringValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiAnimationType), "null");
+
+        switch (animationTypeString) {
+            case "none":
+                animationType = AnimationType.NONE;
+                break;
+            case "color":
+                animationType = AnimationType.COLOR;
+                break;
+            case "slide":
+                animationType = AnimationType.SLIDE;
+                break;
+            case "pinch":
+                animationType = AnimationType.PINCH;
+                break;
+            case "bump":
+                animationType = AnimationType.BUMP;
+                break;
+            case "rotate":
+                animationType = AnimationType.ROTATE;
+                break;
+            case "rotate_pinch":
+                animationType = AnimationType.ROTATE_PINCH;
+                break;
+            case "necklace":
+                animationType = AnimationType.NECKLACE;
+                break;
+            case "necklace2":
+                animationType = AnimationType.NECKLACE2;
+                break;
+            case "cover":
+                animationType = AnimationType.COVER;
+                break;
+            case "fill":
+                animationType = AnimationType.FILL;
+                break;
+            case "surround":
+                animationType = AnimationType.SURROUND;
+                break;
+            case "null":
+                animationType = AttrUtil.DEFAULT_ANIMATION_TYPE;
+                break;
+            default:
+                break;
+        }
+
+        String orientation = AttrUtil.getStringValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiArcOrientation), "null");
+
+        switch (orientation) {
+            case "toUp":
+                arcOrientation = ArcOrientation.TO_UP;
+                break;
+            case "toDown":
+                arcOrientation = ArcOrientation.TO_DOWN;
+                break;
+            case "toRight":
+                arcOrientation = ArcOrientation.TO_RIGHT;
+                break;
+            case "toLeft":
+                arcOrientation = ArcOrientation.TO_LEFT;
+                break;
+            case "toUpRight":
+                arcOrientation = ArcOrientation.TO_UP_RIGHT;
+                break;
+            case "toUpLeft":
+                arcOrientation = ArcOrientation.TO_UP_LEFT;
+                break;
+            case "toDownRight":
+                arcOrientation = ArcOrientation.TO_DOWN_RIGHT;
+                break;
+            case "toDownLeft":
+                arcOrientation = ArcOrientation.TO_DOWN_LEFT;
+                break;
+            case "null":
+                arcOrientation = AttrUtil.DEFAULT_ARC_ORIENTATION;
+                break;
+            default:
+                break;
+        }
+
+        String spotShapeString = AttrUtil.getStringValue(attrSet, AttrUtil
+                .getString(context, ResourceTable.String_apiSpotShape), "null");
+
+        switch (spotShapeString) {
+            case "circle":
+                spotShape = SpotShape.CIRCLE;
+                break;
+            case "roundedSquare":
+                spotShape = SpotShape.ROUNDED_SQUARE;
+                break;
+            case "square":
+                spotShape = SpotShape.SQUARE;
+                break;
+            case "null":
+                spotShape = AttrUtil.DEFAULT_SPOT_SHAPE;
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Initialise Paint.
+     */
+    private void initTools() {
+        paint = new Paint();
         paint.setAntiAlias(true);
+        paint.setStrokeCap(Paint.StrokeCap.ROUND_CAP);
+        paint.setStrokeWidth(1);
+        paint.setStyle(Paint.Style.FILL_STYLE);
     }
 
-    // ***************** Overrides **
+    // *********************************** Overridden functions *************************************************
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-
-        Resources r = Resources.getSystem();
-        if(widthMode == MeasureSpec.UNSPECIFIED || widthMode == MeasureSpec.AT_MOST){
-            widthSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, r.getDisplayMetrics());
-            widthMeasureSpec = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY);
-        }
-
-        if(heightMode == MeasureSpec.UNSPECIFIED || heightSize == MeasureSpec.AT_MOST){
-            heightSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, r.getDisplayMetrics());
-            heightMeasureSpec = MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY);
-        }
-
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    public boolean onEstimateSize(int widthEstimateConfig, int heightEstimateConfig) {
+        int width = Component.EstimateSpec.getSize(widthEstimateConfig);
+        int height = Component.EstimateSpec.getSize(heightEstimateConfig);
+        setEstimatedSize(
+                Component.EstimateSpec.getChildSizeWithMode(width, width, Component.EstimateSpec.NOT_EXCEED),
+                Component.EstimateSpec.getChildSizeWithMode(height, height, Component.EstimateSpec.NOT_EXCEED));
+        return true;
     }
 
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-
-        findViewPager();
-
-        calcDirection();
-        calcRadiusAndCenter();
-        prepareFormulaForCostantArcData();
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
+    public void onDraw(Component component, Canvas canvas) {
         calcValues();
         paintSpotsAndHand(canvas);
     }
 
     @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        currentPosition = position;
-        currentPositionOffset = positionOffset;
+    public void onPageSliding(int position, float positionOffset, int positionOffsetPixels) {
+        // positionOffsetPixels is negative if sliding if from right to left
+        currentPosition = positionOffsetPixels >= 0 ? position : position - 1;
+        currentPositionOffset = positionOffsetPixels >= 0 ? positionOffset : 1 - positionOffset;
         correctedCurrentPositionOffset = currentDirection ? currentPositionOffset : -currentPositionOffset;
         invalidate();
     }
 
     @Override
-    public void onPageSelected(int position) {
+    public void onPageChosen(int i) {
         invalidate();
     }
 
     @Override
-    public void onPageScrollStateChanged(int state) {
+    public void onPageSlideStateChanged(int i) {
+        // Do nothing
     }
 
     @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        findViewPager();
+    public void onComponentBoundToWindow(Component component) {
+        findPageSlider();
+        calcDirection();
+        calcRadiusAndCenter();
+        prepareFormulaForConstantArcData();
     }
 
-    //**** Colors, shapes and animations ***
-
-    boolean currentDirection = true;
-    void calcDirection() {
-        if (       arcOrientation == toLeft
-                || arcOrientation == toDown
-//                || arcOrientation == toDownRight
-                || arcOrientation == toDownLeft)
-            currentDirection = false;
-        else currentDirection = true;
-        if (animationType == rotate || animationType == rotate_pinch || animationType == necklace || animationType == necklace2)
-            currentDirection = !currentDirection;
-        if (invertDirection) currentDirection = !currentDirection;
+    @Override
+    public void onComponentUnboundFromWindow(Component component) {
+        // Do nothing
     }
 
     /**
-     * Calculate radius and center of the portion of ellipse to be drawn, based on orientation and size of the window
+     * Finds the PageSlider.
+     */
+    private void findPageSlider() {
+        if (pageSlider != null) {
+            return;
+        }
+        if (pageSliderId == 0) {
+            return;
+        }
+        Context ctx = getContext();
+        if (ctx instanceof Ability) {
+            Ability ability = (Ability) getContext();
+            Component component = ability.findComponentById(pageSliderId);
+            if (component instanceof PageSlider) {
+                configurePageSlider((PageSlider) component);
+            }
+        }
+    }
+
+    /**
+     * Finds PageProvider, adds PageChangedListener to the found pageSlider.
+     *
+     * @param pageSlider1 PageSlider Component found in the Layout.
+     */
+    private void configurePageSlider(PageSlider pageSlider1) {
+        releasePageSlider();
+        this.pageSlider = pageSlider1;
+        pageSlider.addPageChangedListener(this);
+        pagerProvider = pageSlider.getProvider();
+        currentPosition = pageSlider.getCurrentPage();
+    }
+
+    /**
+     * Releases the Page Slider.
+     */
+    public void releasePageSlider() {
+        if (pageSlider != null) {
+            pageSlider.removePageChangedListener(this);
+            pageSlider = null;
+        }
+    }
+
+    // *************************** Colors, shapes and animations *******************************
+
+    boolean currentDirection = true;
+
+    /**
+     * Decides the direction of spot movement when pages are sliding.
+     */
+    private void calcDirection() {
+        currentDirection = arcOrientation != ArcOrientation.TO_LEFT && arcOrientation != ArcOrientation.TO_DOWN
+                && arcOrientation != ArcOrientation.TO_DOWN_LEFT;
+        if (animationType == AnimationType.ROTATE || animationType == AnimationType.ROTATE_PINCH
+                || animationType == AnimationType.NECKLACE || animationType == AnimationType.NECKLACE2) {
+            currentDirection = !currentDirection;
+        }
+        if (invertDirection) {
+            currentDirection = !currentDirection;
+        }
+    }
+
+    /**
+     * Calculate radius and center of the portion of ellipse to be drawn, based on orientation and size of the window.
      */
     void calcRadiusAndCenter() {
         final int width = getWidth();
         final int height = getHeight();
 
         // horizontal
-        if (arcOrientation == toUp){
-            verticalRadius = height - spotsRadius * 2;
-            horizontalRadius = width / 2 - spotsRadius;
-            centerX = width / 2;
-            centerY = height - spotsRadius;
-        }
-        else if (arcOrientation == toDown) {
-            verticalRadius = height - spotsRadius * 2;
-            horizontalRadius = width / 2 - spotsRadius;
-            centerX = width / 2;
+        if (arcOrientation == ArcOrientation.TO_UP) {
+            verticalRadius = (float) (height - spotsRadius * 2.0);
+            horizontalRadius = (float) (width / 2.0 - spotsRadius);
+            centerX = (float) (width / 2.0);
+            centerY = height - (float) spotsRadius;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN) {
+            verticalRadius = (float) (height - spotsRadius * 2.0);
+            horizontalRadius = (float) (width / 2.0 - spotsRadius);
+            centerX = (float) (width / 2.0);
             centerY = spotsRadius;
-        }
-        // vertical
-        else if (arcOrientation == toRight)  {
-            verticalRadius = height / 2 - spotsRadius;
-            horizontalRadius = width - spotsRadius * 2;
+        } else if (arcOrientation == ArcOrientation.TO_RIGHT) { // vertical
+            verticalRadius = (float) (height / 2.0 - spotsRadius);
+            horizontalRadius = width - (float) spotsRadius * 2;
             centerX = spotsRadius;
-            centerY = height / 2;
-        }
-        else if (arcOrientation == toLeft)  {
-            verticalRadius = height / 2 - spotsRadius;
-            horizontalRadius = width - spotsRadius * 2;
-            centerX = width - spotsRadius;
-            centerY = height / 2;
-        }
-        // corners
-        else if (arcOrientation == toUpRight) {
-            verticalRadius = height - 2 * spotsRadius;
-            horizontalRadius = width - 2 * spotsRadius;
+            centerY = (float) (height / 2.0);
+        } else if (arcOrientation == ArcOrientation.TO_LEFT)  {
+            verticalRadius = (float) (height / 2.0 - spotsRadius);
+            horizontalRadius = width - (float) spotsRadius * 2;
+            centerX = width - (float) spotsRadius;
+            centerY = (float) (height / 2.0);
+        } else if (arcOrientation == ArcOrientation.TO_UP_RIGHT) { // corners
+            verticalRadius = height - 2 * (float) spotsRadius;
+            horizontalRadius = width - 2 * (float) spotsRadius;
             centerX = spotsRadius;
-            centerY = height - spotsRadius;
-        }
-        else if (arcOrientation == toUpLeft) {
-            verticalRadius = height - 2 * spotsRadius;
-            horizontalRadius = width - 2 * spotsRadius;
-            centerX = width - spotsRadius;
-            centerY = height - spotsRadius;
-        }
-        else if (arcOrientation == toDownRight) {
-            verticalRadius = height - 2 * spotsRadius;
-            horizontalRadius = width - 2 * spotsRadius;
+            centerY = height - (float) spotsRadius;
+        } else if (arcOrientation == ArcOrientation.TO_UP_LEFT) {
+            verticalRadius = height - 2 * (float) spotsRadius;
+            horizontalRadius = width - 2 * (float) spotsRadius;
+            centerX = width - (float) spotsRadius;
+            centerY = height - (float) spotsRadius;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN_RIGHT) {
+            verticalRadius = height - 2 * (float) spotsRadius;
+            horizontalRadius = width - 2 * (float) spotsRadius;
             centerX = spotsRadius;
             centerY = spotsRadius;
-        }
-        else if (arcOrientation == toDownLeft) {
-            verticalRadius = height - 2 * spotsRadius;
-            horizontalRadius = width - 2 * spotsRadius;
-            centerX = width - spotsRadius;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN_LEFT) {
+            verticalRadius = height - 2 * (float) spotsRadius;
+            horizontalRadius = width - 2 * (float) spotsRadius;
+            centerX = width - (float) spotsRadius;
             centerY = spotsRadius;
         }
     }
 
-    int calcSelectedSpotColor() {
-        if (animationType == color) return proportionalScaleColor(selectedSpotColor, spotsColor, currentPositionOffset);
-        if (animationType == slide || animationType == pinch || animationType == bump) return (currentPositionOffset == 0 ? 0 : spotsColor);
-        if (animationType == surround) return spotsColor;
+    /**
+     * Depending upon animation Type calculates Selected spot color.
+     *
+     * @return Selected spot color.
+     */
+    private int calcSelectedSpotColor() {
+        if (animationType == AnimationType.COLOR) {
+            return proportionalScaleColor(selectedSpotColor, spotsColor, currentPositionOffset);
+        }
+        if (animationType == AnimationType.SLIDE || animationType == AnimationType.PINCH
+                || animationType == AnimationType.BUMP) {
+            return (currentPositionOffset == 0 ? 0 : spotsColor);
+        }
+        if (animationType == AnimationType.SURROUND) {
+            return spotsColor;
+        }
         return selectedSpotColor;
     }
 
-    int calcCurrentSpotsColor() {
-        if (animationType == color) return proportionalScaleColor(spotsColor, selectedSpotColor, currentPositionOffset);
+    /**
+     * Depending upon animationType calculates spotsColor.
+     *
+     * @return spots color.
+     */
+    private int calcCurrentSpotsColor() {
+        if (animationType == AnimationType.COLOR) {
+            return proportionalScaleColor(spotsColor, selectedSpotColor, currentPositionOffset);
+        }
         return spotsColor;
     }
 
     /**
-     * Paint the spot number n with that color!
-     * @param canvas
-     * @param n
-     * @param color
+     * Paint the spot number n with that color!.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
+     * @param n Current page number or spot number.
+     * @param color color of the shape.
      */
     void paintSpot(Canvas canvas, int n, float positionOffset, int color, float radius, boolean stroke) {
-        paint.setStyle(stroke ? STROKE : FILL);
-        paint.setColor(color);
+        paint.setStyle(stroke ? Paint.Style.STROKE_STYLE : Paint.Style.FILL_STYLE);
+        paint.setColor(new Color(color));
         double angle = calcAngle(n, positionOffset);
         double x = centerX + horizontalRadius * Math.sin(angle);
         double y = centerY - verticalRadius * Math.cos(angle);
-        if (spotShape == circle)
-            canvas.drawCircle((float)x, (float)y, radius, paint);
-        else if (spotShape == roundedSquare) {
+        if (spotShape == SpotShape.CIRCLE) {
+            canvas.drawCircle((float) x, (float) y, radius, paint);
+        } else if (spotShape == SpotShape.ROUNDED_SQUARE) {
             float roundRadius = 2f * radius / 3f;
-            canvas.drawRoundRect(new RectF((float) x - radius, (float) y - radius, (float) x + radius, (float) y + radius), roundRadius, roundRadius, paint);
+            canvas.drawRoundRect(new RectF((float) x - radius, (float) y - radius,
+                    (float) x + radius, (float) y + radius), roundRadius, roundRadius, paint);
+        } else if (spotShape == SpotShape.SQUARE) {
+            canvas.drawRect(new RectF((float) x - radius, (float) y - radius,
+                    (float) x + radius, (float) y + radius), paint);
         }
-        else if (spotShape == square)
-            canvas.drawRect(new RectF((float)x-radius, (float)y-radius, (float)x+radius, (float)y+radius), paint);
     }
+
+    /**
+     * Paints the handle.
+     *
+     * @param canvas Current canvas object to draw 2D graphics
+     * @param n spot number or page number
+     * @param positionOffset fraction of page slided
+     */
     void paintHand(Canvas canvas, int n, float positionOffset) {
-        paint.setColor(handColor);
+        paint.setColor(new Color(handColor));
         paint.setStrokeWidth(handWidth);
         double angle = calcAngle(n, positionOffset);
         double x = centerX + horizontalRadius * Math.sin(angle) * handRelativeLength;
         double y = centerY - verticalRadius * Math.cos(angle) * handRelativeLength;
-        canvas.drawLine(centerX, centerY, (float)x, (float)y, paint);
+        canvas.drawLine(centerX, centerY, (float) x, (float) y, paint);
     }
 
     /**
-     * When rotating one extra spot must be added
-     * @param canvas
+     * When rotating one extra spot must be added.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
      */
     void paintLeftMostSpot(Canvas canvas) {
-        if (animationType != rotate && animationType != rotate_pinch && animationType != necklace && animationType != necklace2) return;
-        if (currentPositionOffset == 0) return;
-        paintSpot(canvas, -1, correctedCurrentPositionOffset, spotsColor, (float)calcSpotsRadius(0), false);
-    }
-
-    double calcSpotsRadius(int n) {
-        if (animationType == rotate_pinch) return calcPinchRadius();
-        else if (animationType == surround) return calcSurroundRadius();
-        else if (animationType == necklace) return calcNecklaceRadius(n);
-        else if (animationType == necklace2) return calcNecklace2Radius(n);
-        else return spotsRadius;
-    }
-    double calcSelectedSpotRadius() {
-        if (animationType == surround) return calcSurroundRadius();
-        else if (animationType == necklace) return calcNecklaceRadius(currentPosition);
-        else return spotsRadius;
+        if (animationType != AnimationType.ROTATE && animationType != AnimationType.ROTATE_PINCH
+                && animationType != AnimationType.NECKLACE && animationType != AnimationType.NECKLACE2) {
+            return;
+        }
+        if (currentPositionOffset == 0) {
+            return;
+        }
+        paintSpot(canvas, -1, correctedCurrentPositionOffset, spotsColor, (float) calcSpotsRadius(0), false);
     }
 
     /**
-     * certain animations need an additional selected spot to be moving over the normal spots
-     * @param canvas
+     * Calculates the spot radius depending upon type of animation.
+     *
+     * @param n Current page number or Spot number.
+     * @return spot radius.
+     */
+    private double calcSpotsRadius(int n) {
+        if (animationType == AnimationType.ROTATE_PINCH) {
+            return calcPinchRadius();
+        } else if (animationType == AnimationType.SURROUND) {
+            return calcSurroundRadius();
+        } else if (animationType == AnimationType.NECKLACE) {
+            return calcNecklaceRadius(n);
+        } else if (animationType == AnimationType.NECKLACE2) {
+            return calcNecklace2Radius(n);
+        } else {
+            return spotsRadius;
+        }
+    }
+
+    /**
+     * Calculates the selected spot radius depending upon type of animation.
+     *
+     * @return spot radius
+     */
+    private double calcSelectedSpotRadius() {
+        if (animationType == AnimationType.SURROUND) {
+            return calcSurroundRadius();
+        } else if (animationType == AnimationType.NECKLACE) {
+            return calcNecklaceRadius(currentPosition);
+        } else {
+            return spotsRadius;
+        }
+    }
+
+    /**
+     * certain animations need an additional selected spot to be moving over the normal spots.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
      */
     void paintMovingSpot(Canvas canvas) {
-        if (animationType == pinch)
-            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor, (float) calcPinchRadius(), false);
-        else if (animationType == bump)
-            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor, (float)calcBumpRadius(), false);
-        else if (animationType == slide)
-            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor, spotsRadius, false);
-        else if (animationType == surround)
-            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor, spotsRadius, true);
+        if (animationType == AnimationType.PINCH) {
+            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor,
+                    (float) calcPinchRadius(), false);
+        } else if (animationType == AnimationType.BUMP) {
+            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor,
+                    (float) calcBumpRadius(), false);
+        } else if (animationType == AnimationType.SLIDE) {
+            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor,
+                    spotsRadius, false);
+        } else if (animationType == AnimationType.SURROUND) {
+            paintSpot(canvas, currentPosition, correctedCurrentPositionOffset, selectedSpotColor,
+                    spotsRadius, true);
+        }
     }
 
     /**
-     * Specific for animations Cover && Fill, the selected spot reduces its radius and increases back
-     * @param canvas
+     * Specific for animations Cover && Fill, the selected spot reduces its radius and increases back.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
      */
     void paintFillSpot(Canvas canvas) {
-        if (animationType != cover && animationType != fill) return;
-        paint.setStyle(FILL);
-        if (currentPositionOffset < 0.5)
+        if (animationType != AnimationType.COVER && animationType != AnimationType.FILL) {
+            return;
+        }
+        paint.setStyle(Paint.Style.FILL_STYLE);
+        if (currentPositionOffset < 0.5) {
             paintSpot(canvas, currentPosition, 0, selectedSpotColor, (float) calcFillRadius(), false);
-        else
-            paintSpot(canvas, currentPosition+1, 0, selectedSpotColor, (float) calcFillRadius(), false);
+        } else {
+            paintSpot(canvas, currentPosition + 1, 0, selectedSpotColor, (float) calcFillRadius(), false);
+        }
     }
 
     /**
-     * used for Pinch animation
-     * @return
+     * used for Pinch animation.
+     *
+     * @return spot radius.
      */
     double calcPinchRadius() {
         double radius;
-        if (currentPositionOffset == 0) radius = spotsRadius;
-        else if (currentPositionOffset < 0.5)
-            radius = mapValueFromRangeToRange(currentPositionOffset, 0, 0.5, spotsRadius, 2*spotsRadius/3);
-        else
-            radius = mapValueFromRangeToRange(currentPositionOffset, 0.5, 1, 2*spotsRadius/3, spotsRadius);
+        if (currentPositionOffset == 0) {
+            radius = spotsRadius;
+        } else if (currentPositionOffset < 0.5) {
+            radius = mapValueFromRangeToRange(currentPositionOffset, 0, 0.5, spotsRadius, 2.0 * spotsRadius / 3.0);
+        } else {
+            radius = mapValueFromRangeToRange(currentPositionOffset, 0.5, 1, 2.0 * spotsRadius / 3.0, spotsRadius);
+        }
         return radius;
     }
 
     /**
-     * used for Bump animation
-     * @return
+     * used for Bump animation.
+     *
+     * @return spot radius.
      */
     double calcBumpRadius() {
         double radius;
-        if (currentPositionOffset == 0) radius = spotsRadius;
-        else if (currentPositionOffset < 0.5)
-            radius = mapValueFromRangeToRange(currentPositionOffset, 0, 0.5, spotsRadius, 3*spotsRadius/2);
-        else
-            radius = mapValueFromRangeToRange(currentPositionOffset, 0.5, 1, 3*spotsRadius/2, spotsRadius);
+        if (currentPositionOffset == 0) {
+            radius = spotsRadius;
+        } else if (currentPositionOffset < 0.5) {
+            radius = mapValueFromRangeToRange(currentPositionOffset, 0, 0.5, spotsRadius, 3.0 * spotsRadius / 2.0);
+        } else {
+            radius = mapValueFromRangeToRange(currentPositionOffset, 0.5, 1, 3.0 * spotsRadius / 2.0, spotsRadius);
+        }
         return radius;
     }
 
     /**
-     * Radius of the smaller spots for Surround animation
-     * @return
+     * Radius of the smaller spots for Surround animation.
+     *
+     * @return spot radius.
      */
     double calcSurroundRadius() {
         return 0.75d * spotsRadius;
     }
 
     /**
-     * used to change radius of the spots with Necklace animation
-     * @param n
-     * @return
+     * used to change radius of the spots with Necklace animation.
+     *
+     * @param n current page number or spot number.
+     * @return current spot radius.
      */
     double calcNecklaceRadius(int n) {
         double pos = n + currentPositionOffset;
-        double p = (pages-1d)/2;
-        if (pos < p)
-            return mapValueFromRangeToRange(pos, 0, p, spotsRadius/3, spotsRadius);
-        else
-            return mapValueFromRangeToRange(pos, p, pages-1, spotsRadius, spotsRadius/3);
+        double p = (pages - 1d) / 2;
+        if (pos < p) {
+            return mapValueFromRangeToRange(pos, 0, p, spotsRadius / 3.0, spotsRadius);
+        } else {
+            return mapValueFromRangeToRange(pos, p, pages - 1.0, spotsRadius, spotsRadius / 3.0);
+        }
     }
 
     /**
-     * used to change radius of the spots with Necklace2 animation
-     * @param n
-     * @return
+     * used to change radius of the spots with Necklace2 animation.
+     *
+     * @param n current spot number or page number.
+     * @return spot radius.
      */
     double calcNecklace2Radius(int n) {
         double p = Math.abs(n - currentPosition);
-        return mapValueFromRangeToRange(p, pages-1, 0, spotsRadius/4, spotsRadius);
+        return mapValueFromRangeToRange(p, pages - 1.0, 0, spotsRadius / 4.0, spotsRadius);
     }
 
     /**
-     * used for Cover && Fill animations
+     * used for Cover && Fill animations.
      */
     double calcFillRadius() {
         double radius;
-        if (currentPositionOffset == 0) radius = spotsRadius;
-        else if (currentPositionOffset < 0.5)
+        if (currentPositionOffset == 0) {
+            radius = spotsRadius;
+        } else if (currentPositionOffset < 0.5) {
             radius = mapValueFromRangeToRange(currentPositionOffset, 0, 0.5, spotsRadius, 0);
-        else
+        } else {
             radius = mapValueFromRangeToRange(currentPositionOffset, 0.5, 1, 0, spotsRadius);
+        }
         return radius;
     }
 
     /**
-     * calc offset when all spots must be rotated for the animation
-     * @return
+     * calc offset when all spots must be rotated for the animation.
+     *
+     * @return amount of rotation.
      */
     float calcAllSpotsOffset() {
-        if (animationType != rotate && animationType != rotate_pinch && animationType != necklace && animationType != necklace2) return 0;
+        if (animationType != AnimationType.ROTATE && animationType != AnimationType.ROTATE_PINCH
+                && animationType != AnimationType.NECKLACE && animationType != AnimationType.NECKLACE2) {
+            return 0;
+        }
         return correctedCurrentPositionOffset;
     }
 
     /**
-     * paint all spots, considering animations and all the rest
-     * @param canvas
+     * Paints all the spots, considering animations and the rest.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
      */
-    void paintSpotsAndHand(Canvas canvas) {
-        if (animationType == fill) paint.setStyle(Paint.Style.STROKE);
-        else paint.setStyle(FILL);
-
-        for (int w=0; w<pages; w++) {
-            if (w != currentPosition && w != currentPosition+1)
-                paintSpot(canvas, w, calcAllSpotsOffset(), spotsColor, (float)calcSpotsRadius(w), animationType == fill);
+    private void paintSpotsAndHand(Canvas canvas) {
+        if (animationType == AnimationType.FILL) {
+            paint.setStyle(Paint.Style.STROKE_STYLE);
+        } else {
+            paint.setStyle(Paint.Style.FILL_STYLE);
         }
-
-        paintLeftMostSpot(canvas);
-        paintTheHand(canvas);
-
-
-        if (animationType == color) {
-            if (currentPositionOffset < 0.5) {
-                paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(), (float) calcSpotsRadius(currentPosition + 1), false);
-                paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(), spotsRadius, false);  // the selected spot is painted as last one to be over the others
-            } else {
-                paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(), spotsRadius, false);  // the selected spot is painted as last one to be over the others
-                paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(), (float) calcSpotsRadius(currentPosition), false);
+        for (int w = 0; w < pages; w++) {
+            if (w != currentPosition && w != currentPosition + 1) {
+                paintSpot(canvas, w, calcAllSpotsOffset(), spotsColor, (float) calcSpotsRadius(w),
+                        animationType == AnimationType.FILL);
             }
         }
-        else if (animationType == cover) {
-            paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, false);
-            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, false);  // the selected spot is painted as last one to be over the others
-        }
-        else if (animationType == fill) {
+        paintLeftMostSpot(canvas);
+        paintTheHand(canvas);
+        if (animationType == AnimationType.COLOR) {
+            if (currentPositionOffset < 0.5) {
+                paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(),
+                        (float) calcSpotsRadius(currentPosition + 1), false);
+                // the selected spot is painted as last one to be over the others
+                paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(),
+                        spotsRadius, false);
+            } else {
+                // the selected spot is painted as last one to be over the others
+                paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(),
+                        spotsRadius, false);
+                paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(),
+                        (float) calcSpotsRadius(currentPosition), false);
+            }
+        } else if (animationType == AnimationType.COVER) {
+            paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(),
+                    spotsRadius, false);
+            // the selected spot is painted as last one to be over the others
+            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, false);
+        } else if (animationType == AnimationType.FILL) {
             paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, true);
-            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, true);  // the selected spot is painted as last one to be over the others
-        }
-        else {
-            paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(), (float) calcSpotsRadius(currentPosition + 1), false);
-            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(), (float)calcSelectedSpotRadius(), false);  // the selected spot is painted as last one to be over the others
+            // the selected spot is painted as last one to be over the others
+            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcCurrentSpotsColor(), spotsRadius, true);
+        } else {
+            paintSpot(canvas, currentPosition + 1, calcAllSpotsOffset(), calcCurrentSpotsColor(),
+                    (float) calcSpotsRadius(currentPosition + 1), false);
+            // the selected spot is painted as last one to be over the others
+            paintSpot(canvas, currentPosition, calcAllSpotsOffset(), calcSelectedSpotColor(),
+                    (float) calcSelectedSpotRadius(), false);
         }
         paintMovingSpot(canvas);
         paintFillSpot(canvas);
     }
 
     /**
-     * Calculate the value that stands linearly between From and To in a proportion between 0 (From) and 1 (To)
-     * @param valueFrom
-     * @param valueTo
-     * @param proportion01
-     * @return
+     * Calculate the value that stands linearly between From and To in a proportion between 0 (From) and 1 (To).
+     *
+     * @param valueFrom low end value
+     * @param valueTo high end value
+     * @param proportion01 proportion
+     * @return proportional value
      */
     int proportionalScaleValue(int valueFrom, int valueTo, float proportion01) {
-        return ((int)(valueFrom * (1-proportion01) + valueTo * proportion01));
+        return ((int) (valueFrom * (1 - proportion01) + valueTo * proportion01));
     }
 
     /**
      * Map a value within a given range to another range.
-     * @param value the value to map
+     *
+     * @param value the value to map.
      * @param fromLow the low end of the range the value is within
      * @param fromHigh the high end of the range the value is within
      * @param toLow the low end of the range to map to
@@ -626,245 +827,432 @@ public class ArcPageIndicator extends View implements ViewPager.OnPageChangeList
         return toLow + (valueScale * toRangeSize);
     }
 
-
     /**
-     * Calculate the color that stands linearly between From and To in a proportion between 0 (From) and 1 (To)
-     * @param colorFrom
-     * @param colorTo
-     * @param proportion01
-     * @return
+     * Calculate the color that stands linearly between From and To in a proportion between 0 (From) and 1 (To).
+     *
+     * @param colorFrom low end color.
+     * @param colorTo high end color.
+     * @param proportion01 proportion.
+     * @return proportional color.
      */
-    int proportionalScaleColor(int colorFrom, int colorTo, float proportion01) {
-        return new Color().argb(
+    private int proportionalScaleColor(int colorFrom, int colorTo, float proportion01) {
+        return Color.argb(
                 proportionalScaleValue(Color.alpha(colorFrom), Color.alpha(colorTo), proportion01),
-                proportionalScaleValue(Color.red(colorFrom), Color.red(colorTo), proportion01),
-                proportionalScaleValue(Color.green(colorFrom), Color.green(colorTo), proportion01),
-                proportionalScaleValue(Color.blue(colorFrom), Color.blue(colorTo), proportion01)
+                proportionalScaleValue((colorFrom >> 16) & 0xFF, (colorTo >> 16) & 0xFF, proportion01),
+                proportionalScaleValue((colorFrom >> 8) & 0xFF, (colorTo >> 8) & 0xFF, proportion01),
+                proportionalScaleValue(colorFrom & 0xFF, colorTo & 0xFF, proportion01)
         );
     }
 
-
-    void paintTheHand(Canvas canvas) {
-        if (!handEnabled) return;
+    /**
+     * Paints the handle.
+     *
+     * @param canvas Current canvas object to draw 2D graphics.
+     */
+    private void paintTheHand(Canvas canvas) {
+        if (!handEnabled) {
+            return;
+        }
         paintHand(canvas, currentPosition, correctedCurrentPositionOffset);
     }
 
-
-
-    // *************** ELLIPSES (and every other maths) MANAGEMENT ********************************
+    // ***************************** Ellipses (and every other maths) Management ********************************
 
     int pages;
+
     int currentPosition;
+
+    // value between 0 to 1 tells what fraction of page slided.
     float currentPositionOffset = 0;
+
+    // sign change to the currentPositionOffset depending upon direction of sliding.
     float correctedCurrentPositionOffset = 0;
+
     double itemAngle;
-    final static double rotationConstant = -Math.PI/2;
-    double arcRate;  // 2 for half ellipse, 4 for a quarter of ellipse and so on
-    double rotationConstant2;  // used to rotate an ellipse
-    double arcformula_e2, arcformula_factor_1, arcformula_factor_2, arcformula_factor_3; // used in the calculations for the constant arc distribution
+
+    double rotationConstant = -Math.PI / 2;
+
+    // 2 for half ellipse, 4 for a quarter of ellipse and so on
+    double arcRate;
+
+    // used to rotate an ellipse
+    double rotationConstant2;
+
+    // used in the calculations for the constant arc distribution
+    double arcFormulaE2;
+    double arcFormulaFactor1;
+    double arcFormulaFactor2;
+    double arcFormulaFactor3;
 
     /**
-     * Calc all values needed to draw, runtime
+     * Calc all values needed to draw, runtime.
      */
     void calcValues() {
-//        currentPosition = viewPager.getCurrentItem();
-        if (arcOrientation == toUp) { rotationConstant2 = 0; arcRate = 2; }
-        else if (arcOrientation == toDown) { rotationConstant2 = Math.PI; arcRate = 2; }
-
-        else if (arcOrientation == toRight) { rotationConstant2 = Math.PI/2; arcRate = 2; }
-        else if (arcOrientation == toLeft) { rotationConstant2 = -Math.PI/2; arcRate = 2; }
-
-        else if (arcOrientation == toUpRight) { rotationConstant2 = Math.PI/2; arcRate = 4; }
-        else if (arcOrientation == toUpLeft) { rotationConstant2 = 0; arcRate = 4; }
-        else if (arcOrientation == toDownRight) { rotationConstant2 = Math.PI; arcRate = 4; }
-        else if (arcOrientation == toDownLeft) { rotationConstant2 = 3*Math.PI/2; arcRate = 4; }
-
-        if (pagerAdapter != null) {
-            pages = pagerAdapter.getCount();
-            if (pages > 1)
-                itemAngle = Math.PI * 2 / ((pages - 1) * arcRate);
-            else itemAngle = 0;
+        if (arcOrientation == ArcOrientation.TO_UP) {
+            rotationConstant2 = 0;
+            arcRate = 2;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN) {
+            rotationConstant2 = Math.PI;
+            arcRate = 2;
+        } else if (arcOrientation == ArcOrientation.TO_RIGHT) {
+            rotationConstant2 = Math.PI / 2;
+            arcRate = 2;
+        } else if (arcOrientation == ArcOrientation.TO_LEFT) {
+            rotationConstant2 = -Math.PI / 2;
+            arcRate = 2;
+        } else if (arcOrientation == ArcOrientation.TO_UP_RIGHT) {
+            rotationConstant2 = Math.PI / 2;
+            arcRate = 4;
+        } else if (arcOrientation == ArcOrientation.TO_UP_LEFT) {
+            rotationConstant2 = 0;
+            arcRate = 4;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN_RIGHT) {
+            rotationConstant2 = Math.PI;
+            arcRate = 4;
+        } else if (arcOrientation == ArcOrientation.TO_DOWN_LEFT) {
+            rotationConstant2 = 3 * Math.PI / 2;
+            arcRate = 4;
         }
-        else pages = 3;
-
+        if (pagerProvider != null) {
+            pages = pagerProvider.getCount();
+            if (pages > 1) {
+                itemAngle = Math.PI * 2 / ((pages - 1) * arcRate);
+            } else {
+                itemAngle = 0;
+            }
+        } else {
+            pages = 3;
+        }
     }
 
     /**
-     * check if position must be inverted to keep the browsing direction consistent (top->down and left->right)
-     * apply also the invertDirection attribute
-     * @param position
-     * @return inverted or normal position
-     */
-    int invertPosition(int position) {
-        if (!currentDirection)
-            return pages - 1 - position;
-        else return position;
-    }
-
-    double calcAngle(int position, float positionOffset) {
-        position = invertPosition(position);
-        if (intervalMeasureAngle)
-            return itemAngle * position + rotationConstant + rotationConstant2;    // constant angle
-        else
-            return calcAngleConstantArc(position, positionOffset);
-    }
-
-    /**
+     * check if position must be inverted to keep the browsing direction consistent (top->down and left->right).
+     * apply also the invertDirection attribute.
      *
-     * @param position position number
-     * @return approximate angle from the center to the point on the half-ellipses in the desired direction
-     * accordingly to the formula <a href="http://math.stackexchange.com/questions/2093569/points-on-an-ellipse#2093586">here described</a>
+     * @param position indicating the current page.
+     * @return inverted or normal position.
      */
-    double calcAngleConstantArc(int position, float positionOffset) {
-        double t, angle;
+    private int invertPosition(int position) {
+        if (!currentDirection) {
+            return pages - 1 - position;
+        } else {
+            return position;
+        }
+    }
 
-        t = itemAngle * (position + positionOffset) + rotationConstant;    // calculates horizontals with rotationConstant and with rotationConstant2 rotates them to vertical
+    /**
+     * Calculates angle at which spot has to be drawn depending on constant arc length
+     * or constant angle between the spots.
+     *
+     * @param position current page number or spot number.
+     * @param positionOffset fraction of page slided.
+     * @return angle of the spot.
+     */
+    private double calcAngle(int position, float positionOffset) {
+        position = invertPosition(position);
+        if (intervalMeasureAngle) {
+            // constant angle
+            return itemAngle * position + rotationConstant + rotationConstant2;
+        } else {
+            return calcAngleConstantArc(position, positionOffset);
+        }
+    }
+
+    /**
+     * Calculates approximate angle from the center to the point on the half-ellipses in the desired direction
+     * accordingly to the formula<a href="http://math.stackexchange.com/questions/2093569/points-on-an-ellipse#2093586">here described</a>.
+     *
+     * @param position position number.
+     * @return approximate angle.
+     */
+    private double calcAngleConstantArc(int position, float positionOffset) {
+        double t;
+        double angle;
+        // calculates horizontals with rotationConstant and with rotationConstant2 rotates them to vertical
+        t = itemAngle * (position + positionOffset) + rotationConstant;
         angle = t
-                - arcformula_factor_1 * Math.sin(t * 2)
-                + arcformula_factor_2 * Math.sin(t * 4)
-                + arcformula_factor_3 * Math.sin(t * 6)
+                - arcFormulaFactor1 * Math.sin(t * 2)
+                + arcFormulaFactor2 * Math.sin(t * 4)
+                + arcFormulaFactor3 * Math.sin(t * 6)
                 + rotationConstant2;
-        ;
         return angle;
     }
 
     /**
-     * Calc all values that are needed to draw, and that don't depend from position.
-     * Recall this when layout or the number of values change
+     * Calculates all values that are needed to draw, and that don't depend from position.
+     * Recall this when layout or the number of values change.
      */
-    void prepareFormulaForCostantArcData() {
-        if (horizontalRadius < verticalRadius)
-            arcformula_e2 = 1 - (horizontalRadius * horizontalRadius) / (verticalRadius * verticalRadius);  // inverts axis for verticals
-        else
-            arcformula_e2 = 1 - (verticalRadius * verticalRadius) / (horizontalRadius * horizontalRadius);
-        arcformula_factor_1 = arcformula_e2/8 + arcformula_e2*arcformula_e2/16 + 71*arcformula_e2*arcformula_e2*arcformula_e2/2048;
-        arcformula_factor_2 = 5*arcformula_e2*arcformula_e2/256 + 5*arcformula_e2*arcformula_e2*arcformula_e2/256;
-        arcformula_factor_3 = 29*arcformula_e2*arcformula_e2*arcformula_e2/6144;
+    private void prepareFormulaForConstantArcData() {
+        if (horizontalRadius < verticalRadius) {
+            // inverts axis for verticals
+            arcFormulaE2 = 1 - (horizontalRadius * horizontalRadius) / (verticalRadius * verticalRadius);
+        } else {
+            arcFormulaE2 = 1 - (verticalRadius * verticalRadius) / (horizontalRadius * horizontalRadius);
+        }
+        arcFormulaFactor1 = arcFormulaE2 / 8 + arcFormulaE2 * arcFormulaE2 / 16
+                + 71 * arcFormulaE2 * arcFormulaE2 * arcFormulaE2 / 2048;
+        arcFormulaFactor2 = 5 * arcFormulaE2 * arcFormulaE2 / 256
+                + 5 * arcFormulaE2 * arcFormulaE2 * arcFormulaE2 / 256;
+        arcFormulaFactor3 = 29 * arcFormulaE2 * arcFormulaE2 * arcFormulaE2 / 6144;
     }
 
+    // ******************************** Getters and setters *************************************
 
-    // ************* Getters and setters ********************************************************
-
-
-    public int getViewPagerRes() {
-        return viewPagerRes;
+    /**
+     * Gets the page slider Id.
+     *
+     * @return page slider Id.
+     */
+    public int getPageSliderId() {
+        return pageSliderId;
     }
 
-    public void setViewPagerRes(int viewPagerRes) {
-        this.viewPagerRes = viewPagerRes;
+    /**
+     * Sets the page slider Id.
+     *
+     * @param pageSliderId Id of the Page slider.
+     */
+    public void setPageSliderId(int pageSliderId) {
+        this.pageSliderId = pageSliderId;
         invalidate();
     }
 
-    public void setViewPager(ViewPager viewPager) {   // useful when the view pager is created dynamically and there is no res
-        configureViewPager(viewPager);
+    /**
+     * Sets the Page slider.
+     *
+     * @param pageSlider Page Slider to which Arc Page Indicator has to been attached.
+     */
+    public void setPageSlider(PageSlider pageSlider) {
+        // useful when the view pager is created dynamically and there is no res
+        configurePageSlider(pageSlider);
         invalidate();
     }
 
+    /**
+     * Gets the Spots Color.
+     *
+     * @return Color of the spots.
+     */
     public int getSpotsColor() {
         return spotsColor;
     }
 
+    /**
+     * Sets the Color to the spots.
+     *
+     * @param spotsColor Color to been assigned to spots.
+     */
     public void setSpotsColor(int spotsColor) {
         this.spotsColor = spotsColor;
         invalidate();
     }
 
+    /**
+     * Gets the color of the selected spots.
+     *
+     * @return Color of the selected spots.
+     */
     public int getSelectedSpotColor() {
         return selectedSpotColor;
     }
 
+    /**
+     * Sets the Color to the selected spots.
+     *
+     * @param selectedSpotColor Color to been assigned to selected spots.
+     */
     public void setSelectedSpotColor(int selectedSpotColor) {
         this.selectedSpotColor = selectedSpotColor;
         invalidate();
     }
 
+    /**
+     * Gets the radius of the spots.
+     *
+     * @return Radius of the spots.
+     */
     public int getSpotsRadius() {
         return spotsRadius;
     }
 
+    /**
+     * Sets the radius of the spots.
+     *
+     * @param spotsRadius Radius of the spots.
+     */
     public void setSpotsRadius(int spotsRadius) {
         this.spotsRadius = spotsRadius;
         invalidate();
     }
 
+    /**
+     * Tells Whether same Arc length is used or same angle.
+     *
+     * @return true if same angle between spots.
+     */
     public boolean isIntervalMeasureAngle() {
         return intervalMeasureAngle;
     }
 
+    /**
+     * Sets the Interval Measure Angle.
+     *
+     * @param intervalMeasureAngle Yes if same angle between spots.
+     */
     public void setIntervalMeasureAngle(boolean intervalMeasureAngle) {
         this.intervalMeasureAngle = intervalMeasureAngle;
         invalidate();
     }
 
+    /**
+     * Gets the type of animation.
+     *
+     * @return Type of animation.
+     */
     public AnimationType getAnimationType() {
         return animationType;
     }
 
+    /**
+     * Sets the animation type.
+     *
+     * @param animationType Type of animation needed.
+     */
     public void setAnimationType(AnimationType animationType) {
         this.animationType = animationType;
         calcDirection();
         invalidate();
     }
 
+    /**
+     * Gets Arc Orientation.
+     *
+     * @return Arc Orientation.
+     */
     public ArcOrientation getArcOrientation() {
         return arcOrientation;
     }
 
+    /**
+     * Sets the Arc Orientation.
+     *
+     * @param arcOrientation Orientation of arc needed.
+     */
     public void setArcOrientation(ArcOrientation arcOrientation) {
         this.arcOrientation = arcOrientation;
         invalidate();
     }
 
+    /**
+     * Yes if direction is inverted.
+     *
+     * @return Whether the direction is inverted or not.
+     */
     public boolean isInvertDirection() {
         return invertDirection;
     }
 
+    /**
+     * If Yes the inverts the Direction of spot movement.
+     *
+     * @param invertDirection Whether to invert the spot movement direction or not.
+     */
     public void setInvertDirection(boolean invertDirection) {
         this.invertDirection = invertDirection;
         calcDirection();
         invalidate();
     }
 
+    /**
+     * Whether the hand is Enabled or not.
+     *
+     * @return Yes, if hand is enabled.
+     */
     public boolean isHandEnabled() {
         return handEnabled;
     }
 
+    /**
+     * If yes enables the hand.
+     *
+     * @param handEnabled Whether to enable the hand or not.
+     */
     public void setHandEnabled(boolean handEnabled) {
         this.handEnabled = handEnabled;
         invalidate();
     }
 
+    /**
+     * Gets the hand color.
+     *
+     * @return color of the hand.
+     */
     public int getHandColor() {
         return handColor;
     }
 
+    /**
+     * Sets the hand color.
+     *
+     * @param handColor color of the hand needed.
+     */
     public void setHandColor(int handColor) {
         this.handColor = handColor;
         invalidate();
     }
 
+    /**
+     * Sets the width of the hand.
+     *
+     * @return Hand Width.
+     */
     public int getHandWidth() {
         return handWidth;
     }
 
+    /**
+     * Sets the width of the hand.
+     *
+     * @param handWidth Width of the hand needed.
+     */
     public void setHandWidth(int handWidth) {
         this.handWidth = handWidth;
         invalidate();
     }
 
+    /**
+     * Gets the Length of the hand taking radius of the arc as 1.
+     *
+     * @return hand Relative Length.
+     */
     public float getHandRelativeLength() {
         return handRelativeLength;
     }
 
+    /**
+     * Sets the Length of the hand taking radius of the arc as 1.
+     *
+     * @param handRelativeLength Fraction of radius needed as hand length.
+     */
     public void setHandRelativeLength(float handRelativeLength) {
         this.handRelativeLength = handRelativeLength;
         invalidate();
     }
 
+    /**
+     * Gets the Shape of the spots.
+     *
+     * @return spot Shape.
+     */
     public SpotShape getSpotShape() {
         return spotShape;
     }
 
+    /**
+     * Sets the Shape of the spots.
+     *
+     * @param spotShape shape of the spot needed.
+     */
     public void setSpotShape(SpotShape spotShape) {
         this.spotShape = spotShape;
         invalidate();

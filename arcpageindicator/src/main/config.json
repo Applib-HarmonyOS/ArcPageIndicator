@@ -1,0 +1,28 @@
+{
+  "app": {
+    "bundleName": "it.beppi.arcpageindicator",
+    "vendor": "beppi",
+    "version": {
+      "code": 1000000,
+      "name": "1.0.0"
+    },
+    "apiVersion": {
+      "compatible": 5,
+      "target": 5,
+      "releaseType": "Release"
+    }
+  },
+  "deviceConfig": {
+  },
+  "module": {
+    "package": "it.beppi.arcpageindicator",
+    "deviceType": [
+      "phone","tablet"
+    ],
+    "distro": {
+      "deliveryWithInstall": true,
+      "moduleName": "arcpageindicator",
+      "moduleType": "har"
+    }
+  }
+}
