@@ -1,3 +1,5 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=applibgroup_ArcPageIndicator&metric=alert_status)](https://sonarcloud.io/dashboard?id=applibgroup_ArcPageIndicator)
+
 # ArcPageIndicator
 Bored of the usual small points or stressed by the space occupied by a tab bar?<br>
 Try this elevator-like elegant and original page indicator!
