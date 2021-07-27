@@ -18,24 +18,30 @@ A fully customizable super-easy Page Indicator, with stunning animations and ver
 <img src="gifs/elevator.jpg" height="170"><br>
 An old elevator that inspired this project.
 
-### Setup (Gradle)
-In your project's build.gradle file:
+### Dependency
+1. For using ArcPageIndicator module in sample app, include the source code and add the below dependencies in entry/build.gradle to generate hap/support.har.
+```
+	dependencies {
+		implementation project(':arcpageindicator')
+        	implementation fileTree(dir: 'libs', include: ['*.har'])
+        	testCompile 'junit:junit:4.12'
+	}
+```
+2. For using ArcPageIndicator in separate application using har file, add the har file in the entry/libs folder and add the dependencies in entry/build.gradle file.
+```
+	dependencies {
+		implementation fileTree(dir: 'libs', include: ['*.har'])
+		testCompile 'junit:junit:4.12'
+	}
 
-    allprojects {
-        repositories {
-            ...
-            maven { url "https://jitpack.io" }
-            ...
-        }
-    }
-    
-In your Application's or Module's build.gradle file:
-
-    dependencies {
-        ...
-        compile 'com.github.BeppiMenozzi:ArcPageIndicator:1.0.2'
-        ...
-    }
+```
+3. For using ArcPageIndicator from a remote repository in separate application, add the below dependencies in entry/build.gradle file.
+```
+	dependencies {
+		implementation 'dev.applibgroup:arcpageindicator:1.0.0'
+		testCompile 'junit:junit:4.12'
+	}
+```
     
 ### Minimal usage
 Layout for bottom 180° ellipse:
