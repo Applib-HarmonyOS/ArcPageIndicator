@@ -1,6 +1,4 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=applibgroup_ArcPageIndicator&metric=alert_status)](https://sonarcloud.io/dashboard?id=applibgroup_ArcPageIndicator)
-
-# ArcPageIndicator
+# ArcPageIndicator [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=applibgroup_ArcPageIndicator&metric=alert_status)](https://sonarcloud.io/dashboard?id=applibgroup_ArcPageIndicator) [![Build](https://github.com/applibgroup/ArcPageIndicator/actions/workflows/main.yml/badge.svg)](https://github.com/applibgroup/ArcPageIndicator/actions/workflows/main.yml)
 Bored of the usual small points or stressed by the space occupied by a tab bar?<br>
 Try this elevator-like elegant and original page indicator!
 A fully customizable super-easy Page Indicator, with stunning animations and very original and discreet graphics, for Android. Needs a very small screen, perfect when many pages need to be shown and reached in a small time.
