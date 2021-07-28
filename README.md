@@ -1,7 +1,7 @@
 # ArcPageIndicator [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=applibgroup_ArcPageIndicator&metric=alert_status)](https://sonarcloud.io/dashboard?id=applibgroup_ArcPageIndicator) [![Build](https://github.com/applibgroup/ArcPageIndicator/actions/workflows/main.yml/badge.svg)](https://github.com/applibgroup/ArcPageIndicator/actions/workflows/main.yml)
 Bored of the usual small points or stressed by the space occupied by a tab bar?<br>
 Try this elevator-like elegant and original page indicator!
-A fully customizable super-easy Page Indicator, with stunning animations and very original and discreet graphics, for Android. Needs a very small screen, perfect when many pages need to be shown and reached in a small time.
+A fully customizable super-easy Page Indicator, with stunning animations and very original and discreet graphics, for HarmonyOS. Needs a very small screen, perfect when many pages need to be shown and reached in a small time.
 <br>
 
 <img src="gifs/page.gif" height="360">
@@ -42,57 +42,58 @@ An old elevator that inspired this project.
 ```
     
 ### Minimal usage
-Layout for bottom 180° ellipse:
-
-    ...
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    ...
+Layout for left 180° ellipse:
+```xml
     <it.beppi.arcpageindicator.ArcPageIndicator
-        android:id="@+id/arc_pi"
-        android:layout_width="400dp"
-        android:layout_height="120dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        app:apiArcOrientation="toUp"
-        app:apiViewPager="@id/view_pager"
+        ohos:height="120vp"
+        ohos:width="60vp"
+        ohos:vertical_center="true"
+        ohos:align_right="$id:page_slider"
+        ohos:id="$+id:arc_pi_5"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toLeft"
+        app:animationType="fill"
+        app:spotsColor = "#FFFFFFFF"
+        app:selectedSpotColor = "#FF000000"
         />
-
-Layout for upper-left 90° ellipse:
-
-    ...
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    ...
+```
+Layout for upper-right 90° ellipse:
+```xml
     <it.beppi.arcpageindicator.ArcPageIndicator
-        android:id="@+id/arc_pi"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        app:apiArcOrientation="toDownRight"
-        app:apiViewPager="@id/view_pager"
+        ohos:height="60vp"
+        ohos:width="60vp"
+        ohos:align_bottom="$id:page_slider"
+        ohos:align_left="$id:page_slider"
+        ohos:id="$+id:arc_pi_2"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toUpRight"
+        app:animationType="slide"
+        app:spotsRadius = "18"
+        app:spotsColor = "#FF3F51B5"
+        app:selectedSpotColor = "#FFFF4081"
         />
-
+```
 ### Attributes description
 List of attributes with description:
 <table>
 <tr><th colspan="2">General</th></tr>
-<tr><td><b>apiViewPager</b></td><td>The ViewPager associated to the Indicator</td></tr>
+<tr><td><b>pageSliderId</b></td><td>The pageSlider Id associated to the Indicator</td></tr>
 <tr><th colspan="2">Arc appearance</th></tr>
-<tr><td><b>apiArcOrientation</b></td><td>Orientation of the "belly" of the arc. This parameter also affects if the arc will be 90° (corner arc) or 180° (edge arc)</td></tr>
+<tr><td><b>arcOrientation</b></td><td>Orientation of the "belly" of the arc. This parameter also affects if the arc will be 90° (corner arc) or 180° (edge arc)</td></tr>
 <tr><th colspan="2">Spot appearance</th></tr>
-<tr><td><b>apiSpotsColor</b></td><td>Color of the spots</td></tr>
-<tr><td><b>apiSelectedSpotColor</b></td><td>Color of the selected spot</td></tr>
-<tr><td><b>apiSpotsRadius</b></td><td>Size of the spots</td></tr>
-<tr><td><b>apiSpotsShape</b></td><td>Shape of the spots: Circle, RoundedSquare or Square</td></tr>
+<tr><td><b>spotsColor</b></td><td>Color of the spots</td></tr>
+<tr><td><b>selectedSpotColor</b></td><td>Color of the selected spot</td></tr>
+<tr><td><b>spotsRadius</b></td><td>Size of the spots</td></tr>
+<tr><td><b>spotsShape</b></td><td>Shape of the spots: Circle, RoundedSquare or Square</td></tr>
 <tr><th colspan="2">Spots distribution and movement</th></tr>
-<tr><td><b>apiIntervalMeasure</b></td><td>How spots are distributed on the circumference: constant angle or constant arc length. With constant angle, the spots will not be distributed evenly, because of ellipse's eccentricity. Normally constant arc length is used: being a non-finite math problem, here an approximation function is used, as explained later on.</td></tr>
-<tr><td><b>apiInvertDirection</b></td><td>If spots will be selected in inverted direction</td></tr>
-<tr><td><b>apiAnimationType</b></td><td>See below to detailed explanation of animation types</td></tr>
+<tr><td><b>intervalMeasure</b></td><td>How spots are distributed on the circumference: constant angle or constant arc length. With constant angle, the spots will not be distributed evenly, because of ellipse's eccentricity. Normally constant arc length is used: being a non-finite math problem, here an approximation function is used, as explained later on.</td></tr>
+<tr><td><b>invertDirection</b></td><td>If spots will be selected in inverted direction</td></tr>
+<tr><td><b>animationType</b></td><td>See below to detailed explanation of animation types</td></tr>
 <tr><th colspan="2">Hand appearance</th></tr>
-<tr><td><b>apiHandEnabled</b></td><td>If hand is drawn</td></tr>
-<tr><td><b>apiHandColor</b></td><td>Hand's color</td></tr>
-<tr><td><b>apiHandWidth</b></td><td>Hand's width</td></tr>
-<tr><td><b>apiHandRelativeLength</b></td><td>Hand's relative length starting from center to edges (1 = full length)</td></tr>
+<tr><td><b>handEnabled</b></td><td>If hand is drawn</td></tr>
+<tr><td><b>handColor</b></td><td>Hand's color</td></tr>
+<tr><td><b>handWidth</b></td><td>Hand's width</td></tr>
+<tr><td><b>handRelativeLength</b></td><td>Hand's relative length starting from center to edges (1 = full length)</td></tr>
 </table>
 
 ### Animation types
@@ -116,12 +117,8 @@ List of animation types:
 <tr><td><b>Example of rounded squared spots</b></td><td><img src="gifs/c14.gif" height="120"></td><td><img src="gifs/e14.gif" height="90"></td></tr>
 </table>
 
-### New in 1.0.2
-* Fixed a crash when the ViewPager was not found
-* Added setViewPager(), to attach the Indicator to dynamically created viewpagers, by referring the Object and not the id reference number
-
 ### Some maths
-<a href="http://math.stackexchange.com/questions/2093569/points-on-an-ellipse">This question I made</a> helped me solve the
+<a href="http://math.stackexchange.com/questions/2093569/points-on-an-ellipse">This question Mr. Beppi Menozzi made</a> helped him solve the
 ellipse's problem. Indeed, finding arcs of constant length on a known ellipse is a problem with a non-finite solution, that needs integrals to be calculated. There were at least 5 approaches to solve this problem with acceptable performance:
 
 * find the points recursively, by iteratively reducing the error until it's close enough to zero. Pros: easy to do. Cons: adds a indetermined (although very small) time to the drawing process
@@ -130,7 +127,7 @@ ellipse's problem. Indeed, finding arcs of constant length on a known ellipse is
 * use an approximated function. Pros: fast and good enough. Cons: never perfect
 * calculate the elliptic integrals. Pros: perfect. Cons: very very very heavy on performance
 
-I chose to find a good approximated function and that is what you can find inside the code, it's fast enough and the error is near to invisibility. In case you need more performance, you can remove the e6 part of the formula and have a slightly bigger error.
+He chose to find a good approximated function and that is what you can find inside the code, it's fast enough and the error is near to invisibility. In case you need more performance, you can remove the e6 part of the formula and have a slightly bigger error.
 
 The formula used is the one of the referenced question, and thanks very much to its author, <a href="http://math.stackexchange.com/users/299599/ng-chung-tak">Ng Chung Tak</a> that is both the author of the answer, and the author of the formula itself.
 
