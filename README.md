@@ -16,6 +16,10 @@ A fully customizable super-easy Page Indicator, with stunning animations and ver
 <img src="gifs/elevator.jpg" height="170"><br>
 An old elevator that inspired this project.
 
+## Source
+The code in this repository was inspired from [BeppiMenozzi/ArcPageIndicator - v1.0.2](https://github.com/BeppiMenozzi/ArcPageIndicator). 
+We are very thankful to Mr. BeppiMenozzi.
+
 ### Dependency
 1. For using ArcPageIndicator module in sample app, include the source code and add the below dependencies in entry/build.gradle to generate hap/support.har.
 ```
