@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <DependentLayout
     xmlns:ohos="http://schemas.huawei.com/res/ohos"
+    xmlns:app="http://schemas.huawei.com/res/app"
     ohos:height="match_parent"
     ohos:width="match_parent"
     ohos:left_padding="16vp"
@@ -19,11 +20,10 @@
         ohos:height="120vp"
         ohos:width="match_parent"
         ohos:align_bottom="$id:page_slider"
-
         ohos:id="$+id:arc_pi_1"
-        arcOrientation="toUp"
-        animationType="bump"
-        spotsRadius = "24"
+        app:arcOrientation="toUp"
+        app:animationType="bump"
+        app:spotsRadius = "24"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
@@ -31,14 +31,13 @@
         ohos:width="60vp"
         ohos:align_bottom="$id:page_slider"
         ohos:align_left="$id:page_slider"
-
         ohos:id="$+id:arc_pi_2"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toUpRight"
-        animationType="slide"
-        spotsRadius = "18"
-        spotsColor = "#FF3F51B5"
-        selectedSpotColor = "#FFFF4081"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toUpRight"
+        app:animationType="slide"
+        app:spotsRadius = "18"
+        app:spotsColor = "#FF3F51B5"
+        app:selectedSpotColor = "#FFFF4081"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
@@ -46,12 +45,11 @@
         ohos:width="120vp"
         ohos:align_bottom="$id:page_slider"
         ohos:align_right="$id:page_slider"
-
         ohos:id="$+id:arc_pi_3"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toUpLeft"
-        animationType="necklace2"
-        spotsRadius = "6"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toUpLeft"
+        app:animationType="necklace2"
+        app:spotsRadius = "6"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
@@ -59,13 +57,12 @@
         ohos:width="60vp"
         ohos:vertical_center="true"
         ohos:align_left="$id:page_slider"
-
         ohos:id="$+id:arc_pi_4"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toRight"
-        animationType="slide"
-        spotsRadius = "18"
-        spotShape = "roundedSquare"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toRight"
+        app:animationType="slide"
+        app:spotsRadius = "18"
+        app:spotShape = "roundedSquare"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
@@ -73,49 +70,45 @@
         ohos:width="60vp"
         ohos:vertical_center="true"
         ohos:align_right="$id:page_slider"
-
         ohos:id="$+id:arc_pi_5"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toLeft"
-        animationType="fill"
-        spotsColor = "#FFFFFFFF"
-        selectedSpotColor = "#FF000000"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toLeft"
+        app:animationType="fill"
+        app:spotsColor = "#FFFFFFFF"
+        app:selectedSpotColor = "#FF000000"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
         ohos:height="120vp"
         ohos:width="120vp"
         ohos:align_left="$id:page_slider"
-
         ohos:id="$+id:arc_pi_6"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toDownRight"
-        animationType="necklace2"
-        spotsRadius = "12"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toDownRight"
+        app:animationType="necklace2"
+        app:spotsRadius = "12"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
         ohos:height="20vp"
         ohos:width="80vp"
         ohos:horizontal_center="true"
-
         ohos:id="$+id:arc_pi_7"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toDown"
-        animationType="cover"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toDown"
+        app:animationType="cover"
         />
 
     <it.beppi.arcpageindicator.ArcPageIndicator
         ohos:height="60vp"
         ohos:width="60vp"
         ohos:align_right="$id:page_slider"
-
         ohos:id="$+id:arc_pi_8"
-        pageSliderId="$id:page_slider"
-        arcOrientation="toDownLeft"
-        spotsRadius = "5"
-        animationType="slide"
-        handEnabled = "true"
+        app:pageSliderId="$id:page_slider"
+        app:arcOrientation="toDownLeft"
+        app:spotsRadius = "5"
+        app:animationType="slide"
+        app:handEnabled = "true"
     />
 
 </DependentLayout>
