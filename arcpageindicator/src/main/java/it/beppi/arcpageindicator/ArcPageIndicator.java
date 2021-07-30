@@ -11,6 +11,8 @@ import ohos.agp.render.Paint;
 import ohos.agp.utils.Color;
 import ohos.app.Context;
 
+//Created by Beppi on 30/12/2016.
+
 /**
  * ArcPageIndicator is a custom page indicator with stunning animations. Needs a very small screen, prefect when
  * many pages need to be shown and reached in a small time.
